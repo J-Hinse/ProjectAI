@@ -1,18 +1,17 @@
 # Bit Shooter
 
-## Een Roblox project waar je in een stad bent en moet overleven door zombies te schieten
+## Een Roblox project waar je in een stad bent en moet overleven door zombies te schieten. De zombies worden sterker en er komen meer zombies des te langer je overleeft.
 
-Doelgroep is vooral gamers die houden van simpelweg op dingen te schieten.
+## De doelgroep is vooral gamers die houden van simpelweg op dingen te schieten.
 
-in-scope:
-Geweren
-Zombies/iets wat er op lijkt
-Map
-De taco gun
+## in-scope:
+Veel soorten geweren,
+Zombies/iets wat er op lijkt,
+Map,
 Verschillende zombies
 
-out-scope:
-Gun selection
-Gamemodes
-Barricades maken
+## out-scope:
+Gun selection,
+Gamemodes,
+Barricades maken,
 Skins of upgrades krijgen
