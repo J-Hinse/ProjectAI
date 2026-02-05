@@ -1,6 +1,6 @@
-#Bit Shooter
+# Bit Shooter
 
-##Een Roblox project waar je in een stad bent en moet overleven door zombies te schieten
+## Een Roblox project waar je in een stad bent en moet overleven door zombies te schieten
 
 Doelgroep is vooral gamers die houden van simpelweg op dingen te schieten.
 
