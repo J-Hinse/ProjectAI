@@ -1,0 +1,718 @@
+openapi: 3.0.3
+info:
+  title: Library API
+  version: 1.0.0
+  description: Simple in-memory REST API for managing a library.
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /:
+    get:
+      summary: API root
+      responses:
+        '200':
+          description: Basic API info and list of endpoints
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /books:
+    get:
+      summary: List and search books
+      parameters:
+        - in: query
+          name: title
+          schema: { type: string }
+        - in: query
+          name: author
+          schema: { type: string }
+        - in: query
+          name: isbn
+          schema: { type: string }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: available
+          schema:
+            type: string
+            enum: [ "true", "false" ]
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookDetail'
+    post:
+      summary: Create a new book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookCreate'
+      responses:
+        '201':
+          description: Book created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          description: Missing required fields
+        '409':
+          description: ISBN already exists
+
+  /books/{book_id}:
+    get:
+      summary: Get a single book
+      parameters:
+        - in: path
+          name: book_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookDetail'
+        '404':
+          description: Book not found
+    patch:
+      summary: Update a book
+      parameters:
+        - in: path
+          name: book_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookUpdate'
+      responses:
+        '200':
+          description: Updated book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          description: Book not found
+        '409':
+          description: ISBN conflict
+    delete:
+      summary: Delete a book
+      parameters:
+        - in: path
+          name: book_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Book not found
+        '409':
+          description: Active borrows exist
+
+  /members:
+    get:
+      summary: List members
+      parameters:
+        - in: query
+          name: email
+          schema: { type: string }
+        - in: query
+          name: name
+          schema: { type: string }
+        - in: query
+          name: active
+          schema:
+            type: string
+            enum: [ "true", "false" ]
+      responses:
+        '200':
+          description: List of members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+    post:
+      summary: Register a new member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+      responses:
+        '201':
+          description: Member created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '400':
+          description: Missing required fields
+        '409':
+          description: Email already exists
+
+  /members/{member_id}:
+    get:
+      summary: Get a member
+      parameters:
+        - in: path
+          name: member_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: Member not found
+    patch:
+      summary: Update a member
+      parameters:
+        - in: path
+          name: member_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberUpdate'
+      responses:
+        '200':
+          description: Updated member
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+        '404':
+          description: Member not found
+        '409':
+          description: Email conflict
+
+  /members/{member_id}/borrows:
+    get:
+      summary: List a member's borrows
+      parameters:
+        - in: path
+          name: member_id
+          required: true
+          schema: { type: integer }
+        - in: query
+          name: active
+          schema:
+            type: string
+            enum: [ "true", "false" ]
+      responses:
+        '200':
+          description: List of borrows with book info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BorrowWithBook'
+        '404':
+          description: Member not found
+
+  /members/{member_id}/reservations:
+    get:
+      summary: List a member's reservations
+      parameters:
+        - in: path
+          name: member_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of reservations with book info
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationWithBook'
+        '404':
+          description: Member not found
+
+  /borrows:
+    get:
+      summary: List borrows
+      parameters:
+        - in: query
+          name: member_id
+          schema: { type: integer }
+        - in: query
+          name: book_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ "active", "returned" ]
+      responses:
+        '200':
+          description: List of borrows with relations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BorrowWithRelations'
+    post:
+      summary: Borrow a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BorrowCreate'
+      responses:
+        '201':
+          description: Borrow created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Borrow'
+        '400':
+          description: Missing fields or inactive member
+        '404':
+          description: Book or member not found
+        '409':
+          description: No available copies
+
+  /returns:
+    post:
+      summary: Return a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BorrowCreate'
+      responses:
+        '200':
+          description: Borrow updated as returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Borrow'
+        '400':
+          description: Missing fields
+        '404':
+          description: Active borrow not found
+
+  /reservations:
+    get:
+      summary: List reservations
+      parameters:
+        - in: query
+          name: member_id
+          schema: { type: integer }
+        - in: query
+          name: book_id
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema: { type: string }
+      responses:
+        '200':
+          description: List of reservations with relations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReservationWithRelations'
+    post:
+      summary: Create a reservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+      responses:
+        '201':
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          description: Missing fields
+        '404':
+          description: Book or member not found
+        '409':
+          description: Active reservation already exists
+
+  /reservations/{reservation_id}:
+    patch:
+      summary: Update a reservation
+      parameters:
+        - in: path
+          name: reservation_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+      responses:
+        '200':
+          description: Updated reservation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '404':
+          description: Reservation not found
+    delete:
+      summary: Cancel a reservation
+      parameters:
+        - in: path
+          name: reservation_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204':
+          description: Cancelled
+        '404':
+          description: Reservation not found
+
+  /authors:
+    get:
+      summary: List authors
+      responses:
+        '200':
+          description: List of authors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Author'
+
+  /authors/{author_id}:
+    get:
+      summary: Get an author
+      parameters:
+        - in: path
+          name: author_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Author'
+        '404':
+          description: Author not found
+
+  /authors/{author_id}/books:
+    get:
+      summary: List books by author
+      parameters:
+        - in: path
+          name: author_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        '404':
+          description: Author not found
+
+  /categories:
+    get:
+      summary: List categories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /categories/{category_id}:
+    get:
+      summary: Get a category
+      parameters:
+        - in: path
+          name: category_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          description: Category not found
+
+  /categories/{category_id}/books:
+    get:
+      summary: List books in category
+      parameters:
+        - in: path
+          name: category_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Book'
+        '404':
+          description: Category not found
+
+components:
+  schemas:
+    Book:
+      type: object
+      properties:
+        book_id:
+          type: integer
+        title:
+          type: string
+        isbn:
+          type: string
+        publication_year:
+          type: integer
+        category_ids:
+          type: array
+          items: { type: integer }
+        author_ids:
+          type: array
+          items: { type: integer }
+        total_copies:
+          type: integer
+      required: [ book_id, title, isbn, publication_year, total_copies ]
+
+    BookDetail:
+      allOf:
+        - $ref: '#/components/schemas/Book'
+        - type: object
+          properties:
+            categories:
+              type: array
+              items:
+                $ref: '#/components/schemas/Category'
+            authors:
+              type: array
+              items:
+                $ref: '#/components/schemas/Author'
+            available_copies:
+              type: integer
+
+    BookCreate:
+      type: object
+      properties:
+        title: { type: string }
+        isbn: { type: string }
+        publication_year: { type: integer }
+        category_ids:
+          type: array
+          items: { type: integer }
+        author_ids:
+          type: array
+          items: { type: integer }
+        total_copies:
+          type: integer
+          default: 1
+      required: [ title, isbn, publication_year ]
+
+    BookUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        isbn: { type: string }
+        publication_year: { type: integer }
+        category_ids:
+          type: array
+          items: { type: integer }
+        author_ids:
+          type: array
+          items: { type: integer }
+        total_copies:
+          type: integer
+
+    Member:
+      type: object
+      properties:
+        member_id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        membership_date:
+          type: string
+          format: date
+        status:
+          type: string
+        role:
+          type: string
+      required: [ member_id, name, email, membership_date, status ]
+
+    MemberCreate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+      required: [ name, email ]
+
+    MemberUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        status: { type: string }
+        role: { type: string }
+
+    Borrow:
+      type: object
+      properties:
+        borrow_id:
+          type: integer
+        book_id:
+          type: integer
+        member_id:
+          type: integer
+        borrow_date:
+          type: string
+          format: date
+        return_date:
+          type: string
+          format: date
+          nullable: true
+      required: [ borrow_id, book_id, member_id, borrow_date ]
+
+    BorrowCreate:
+      type: object
+      properties:
+        book_id: { type: integer }
+        member_id: { type: integer }
+      required: [ book_id, member_id ]
+
+    BorrowWithBook:
+      allOf:
+        - $ref: '#/components/schemas/Borrow'
+        - type: object
+          properties:
+            book:
+              $ref: '#/components/schemas/Book'
+
+    BorrowWithRelations:
+      allOf:
+        - $ref: '#/components/schemas/Borrow'
+        - type: object
+          properties:
+            book:
+              $ref: '#/components/schemas/Book'
+            member:
+              $ref: '#/components/schemas/Member'
+
+    Reservation:
+      type: object
+      properties:
+        reservation_id:
+          type: integer
+        book_id:
+          type: integer
+        member_id:
+          type: integer
+        reservation_date:
+          type: string
+          format: date
+        status:
+          type: string
+      required: [ reservation_id, book_id, member_id, reservation_date, status ]
+
+    ReservationCreate:
+      type: object
+      properties:
+        book_id: { type: integer }
+        member_id: { type: integer }
+      required: [ book_id, member_id ]
+
+    ReservationWithBook:
+      allOf:
+        - $ref: '#/components/schemas/Reservation'
+        - type: object
+          properties:
+            book:
+              $ref: '#/components/schemas/Book'
+
+    ReservationWithRelations:
+      allOf:
+        - $ref: '#/components/schemas/Reservation'
+        - type: object
+          properties:
+            book:
+              $ref: '#/components/schemas/Book'
+            member:
+              $ref: '#/components/schemas/Member'
+
+    Author:
+      type: object
+      properties:
+        author_id:
+          type: integer
+        name:
+          type: string
+      required: [ author_id, name ]
+
+    Category:
+      type: object
+      properties:
+        category_id:
+          type: integer
+        name:
+          type: string
+      required: [ category_id, name ]
